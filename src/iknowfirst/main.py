@@ -37,7 +37,7 @@ def main():
     collector = Collector(repo)
     fetcher = FetcherDispatch(youtube=YoutubeFetcher())
     llm = build_llm(cfg)
-    analyzer = Analyzer(llm, cfg.push.major_value_threshold)
+    analyzer = Analyzer(llm, cfg.push.major_value_threshold, cfg.push.velocity_major_threshold)
     wecom = WecomClient(cfg.push.webhook_url)
     notifier = Notifier(wecom)
     trendscout = TrendScout(llm, wecom, cfg.trendscout.mode)

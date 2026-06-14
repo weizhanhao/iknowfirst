@@ -26,3 +26,18 @@ def test_parser_failure_is_swallowed(repo):
     def boom(_): raise RuntimeError("feed down")
     c = Collector(repo, parser=boom)
     assert c.collect_feed(Feed("youtube", "http://x", "K"), first_run=False) == []
+
+
+def test_collect_feed_stores_summary_as_raw_text(repo):
+    """RSS summary should be captured and stored as raw_text on the item."""
+    entry_with_summary = ParsedEntry(
+        external_id="s1", title="Paper Title", url="http://y/s1",
+        author="A", published_at=None, summary="This is the abstract text.")
+    feed = Feed("arxiv", "http://rss/arxiv", "arxiv")
+    c = Collector(repo, parser=lambda f: [entry_with_summary])
+    new_items = c.collect_feed(feed, first_run=False)
+    assert len(new_items) == 1
+    # Fetch from repo to verify raw_text was persisted
+    stored = repo.items_by_status("new")
+    assert len(stored) == 1
+    assert stored[0].raw_text == "This is the abstract text."

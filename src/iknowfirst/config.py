@@ -53,6 +53,7 @@ class LLM(BaseModel):
 class PushConfig(BaseModel):
     wecom_webhook_env: str
     major_value_threshold: int = 80
+    velocity_major_threshold: float = 2000.0
     digest_times: list[str] = Field(default_factory=lambda: ["09:00", "20:00"])
 
     @property
@@ -81,5 +82,7 @@ class Config(BaseModel):
 
 def load_config(path: str) -> Config:
     with open(path, "r", encoding="utf-8") as f:
-        raw = yaml.safe_load(f)
+        raw_text = f.read()
+    expanded = os.path.expandvars(raw_text)
+    raw = yaml.safe_load(expanded)
     return Config.model_validate(raw)

@@ -20,10 +20,12 @@ class ItemRepository:
         return set(rows)
 
     def add_new(self, source_type: str, external_id: str, title: str, url: str,
-                author: str | None, published_at: datetime | None, status: str) -> Item:
+                author: str | None, published_at: datetime | None, status: str,
+                raw_text: str | None = None) -> Item:
         with self._sf() as s:
             item = Item(source_type=source_type, external_id=external_id, title=title,
-                        url=url, author=author, published_at=published_at, status=status)
+                        url=url, author=author, published_at=published_at, status=status,
+                        raw_text=raw_text)
             s.add(item); s.commit(); s.refresh(item)
             s.expunge(item)
             return item

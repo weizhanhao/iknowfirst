@@ -17,6 +17,7 @@ class ParsedEntry:
     url: str
     author: str | None
     published_at: datetime | None
+    summary: str | None = None
 
 def default_parser(feed: Feed) -> list[ParsedEntry]:
     parsed = feedparser.parse(feed.url)
@@ -28,10 +29,11 @@ def default_parser(feed: Feed) -> list[ParsedEntry]:
         published = None
         if getattr(e, "published_parsed", None):
             published = datetime(*e.published_parsed[:6], tzinfo=timezone.utc)
+        summary = getattr(e, "summary", None)
         out.append(ParsedEntry(
             external_id=ext, title=getattr(e, "title", ""),
             url=getattr(e, "link", ""), author=getattr(e, "author", None),
-            published_at=published))
+            published_at=published, summary=summary))
     return out
 
 class Collector:
@@ -53,7 +55,8 @@ class Collector:
                 continue
             status = "seen" if first_run else "new"
             item = self._repo.add_new(feed.source_type, e.external_id, e.title, e.url,
-                                      e.author, e.published_at, status=status)
+                                      e.author, e.published_at, status=status,
+                                      raw_text=e.summary)
             if not first_run:
                 new_items.append(item)
         return new_items
