@@ -47,7 +47,7 @@ def test_sampler_no_push_below_threshold():
     sampler.run_once(now)
     assert notifier.spikes == []
 
-def test_sampler_skips_no_video_id_and_swallows_fetch_error():
+def test_sampler_skips_no_video_id():
     repo = _repo(); now = datetime(2026, 6, 15, 12, 0)
     repo.add_new("youtube", "no-id-here", "无ID", "http://x/none", None, None, status="analyzed")
     def boom(vid): raise RuntimeError("api down")
@@ -55,4 +55,14 @@ def test_sampler_skips_no_video_id_and_swallows_fetch_error():
     sampler = EngagementSampler(repo, fetch=boom, notifier=notifier,
                                 velocity_major_threshold=2000.0, track_window_hours=24)
     sampler.run_once(now)
+    assert notifier.spikes == []
+
+def test_sampler_swallows_fetch_error():
+    repo = _repo(); now = datetime(2026, 6, 15, 12, 0)
+    repo.add_new("youtube", "yt:video:vidX", "有ID但接口炸", "http://y/x", None, None, status="analyzed")
+    def boom(vid): raise RuntimeError("api down")
+    notifier = FakeNotifier()
+    sampler = EngagementSampler(repo, fetch=boom, notifier=notifier,
+                                velocity_major_threshold=2000.0, track_window_hours=24)
+    sampler.run_once(now)                # 有合法 video_id → 进入 fetch → 抛错被吞，不崩
     assert notifier.spikes == []

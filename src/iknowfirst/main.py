@@ -69,7 +69,8 @@ def main():
             velocity_major_threshold=cfg.push.velocity_major_threshold,
             track_window_hours=cfg.engagement.track_window_hours)
         sched.add_job(lambda: sampler.run_once(datetime.now()),
-                      "interval", minutes=cfg.engagement.sample_interval_minutes)
+                      "interval", minutes=cfg.engagement.sample_interval_minutes,
+                      max_instances=1, misfire_grace_time=30)
         log.info("engagement sampler registered: every %dmin", cfg.engagement.sample_interval_minutes)
     log.info("iknowfirst started: %d feeds, poll every %dmin", len(feeds), cfg.poll_interval_minutes)
     sched.start()

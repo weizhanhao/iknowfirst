@@ -1,6 +1,6 @@
 from __future__ import annotations
 from datetime import datetime
-from sqlalchemy import select, update
+from sqlalchemy import select, update, asc
 from iknowfirst.db.models import Item, EngagementSample
 
 DEFAULT_BATCH_LIMIT = 500
@@ -47,14 +47,14 @@ class ItemRepository:
             s.execute(update(Item).where(Item.id == item_id).values(raw_text=raw_text))
             s.commit()
 
-    def youtube_tracked_items(self, created_after: datetime) -> list[Item]:
+    def youtube_tracked_items(self, created_after: datetime, limit: int = DEFAULT_BATCH_LIMIT) -> list[Item]:
         with self._sf() as s:
             rows = s.execute(
                 select(Item).where(
                     Item.source_type == "youtube",
                     Item.created_at >= created_after,
                     Item.status.notin_(["seen", "skipped"]),
-                )
+                ).limit(limit)
             ).scalars().all()
             for r in rows:
                 s.expunge(r)
@@ -73,6 +73,7 @@ class ItemRepository:
             rows = s.execute(
                 select(EngagementSample.sampled_at, EngagementSample.likes)
                 .where(EngagementSample.item_id == item_id)
+                .order_by(asc(EngagementSample.sampled_at))
             ).all()
             return [(r[0], r[1]) for r in rows]
 
