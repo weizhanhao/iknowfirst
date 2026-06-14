@@ -43,3 +43,18 @@ def test_flush_empty_digest_sends_nothing():
     n = Notifier(wecom)
     n.flush_digest()
     assert wecom.sent == []
+
+def test_flush_digest_keeps_queue_when_send_fails():
+    class BrokenWecom:
+        def send_markdown(self, content): raise RuntimeError("wecom down")
+    n = Notifier(BrokenWecom())
+    n.handle("普通1", "u1", None, "youtube", _res("normal"), 0, False)
+    n.flush_digest()                       # 不抛
+    assert n.digest_queue_size() == 1      # 队列保留,待重试
+
+def test_safe_send_swallows_wecom_exception():
+    class BrokenWecom:
+        def send_markdown(self, content): raise RuntimeError("wecom down")
+    n = Notifier(BrokenWecom())
+    n.handle("x", "u", None, "youtube", _res("major"), 0, False)  # major 即时推,不得抛
+    assert n.digest_queue_size() == 0

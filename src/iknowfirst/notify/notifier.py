@@ -16,7 +16,7 @@ def format_card(title: str, url: str, author: str | None, source_type: str,
         lines.append("**亮点**：" + "；".join(res.highlights))
     if res.recommendation:
         lines.append(f"**要不要看**：{res.recommendation}")
-    if likes_per_hour and likes_per_hour > 0:
+    if likes_per_hour > 0:
         lines.append(f"**热度**：约 +{int(likes_per_hour)} 赞/小时")
     if degraded:
         lines.append("⚠️ 未取到字幕，基于标题/简介解读")
@@ -34,7 +34,7 @@ class Notifier:
         except Exception:
             log.exception("wecom send failed")
 
-    def handle(self, title, url, author, source_type, res: AnalysisResult,
+    def handle(self, title: str, url: str, author: str | None, source_type: str, res: AnalysisResult,
                likes_per_hour: float, degraded: bool) -> None:
         card = format_card(title, url, author, source_type, res, likes_per_hour, degraded)
         if res.tier == "major":
@@ -49,5 +49,8 @@ class Notifier:
         if not self._digest:
             return
         body = "📰 **AI 动态汇总**\n\n" + "\n\n---\n\n".join(self._digest)
-        self._safe_send(body)
-        self._digest.clear()
+        try:
+            self._wecom.send_markdown(body)
+            self._digest.clear()
+        except Exception:
+            log.exception("wecom digest send failed; will retry on next flush")
