@@ -23,7 +23,6 @@ def test_load_config_parses_sources_and_expands_env(tmp_path, monkeypatch):
           base_url: "http://x/v1"
           model: "agnes-2.0-flash"
           api_key_env: "AGNES_API_KEY"
-          fallback: "deepseek"
         push:
           wecom_webhook_env: "WECOM_WEBHOOK_URL"
           major_value_threshold: 80

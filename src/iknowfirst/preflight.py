@@ -31,10 +31,7 @@ def format_report(results: list[Check]) -> str:
     return "\n".join(lines)
 
 # ---- 具体检查(读 config/env/网络;这些不单测,集成手测) ----
-def _check_config():
-    from iknowfirst.config import load_config
-    path = os.environ.get("CONFIG_PATH", "config.yaml")
-    cfg = load_config(path)
+def _check_config(cfg) -> Check:
     return Check("config 加载", True, f"{len(cfg.sources.youtube_channels)} youtube / {len(cfg.all_keywords())} 关键词")
 
 def _check_env():
@@ -45,8 +42,11 @@ def _check_env():
 
 def _check_agnes():
     from openai import OpenAI
+    key = os.environ.get("AGNES_API_KEY")
+    if not key:
+        return Check("Agnes 可达", False, "AGNES_API_KEY 未设置,跳过网络检查")
     base = os.environ.get("AGNES_BASE_URL", "https://apihub.agnes-ai.com/v1")
-    c = OpenAI(base_url=base, api_key=os.environ["AGNES_API_KEY"], timeout=20.0)
+    c = OpenAI(base_url=base, api_key=key, timeout=20.0)
     r = c.chat.completions.create(model=os.environ.get("AGNES_MODEL", "agnes-2.0-flash"),
                                   messages=[{"role": "user", "content": "ok"}], temperature=0)
     return Check("Agnes 可达", True, f"模型应答 {len((r.choices[0].message.content or ''))} 字")
@@ -63,24 +63,34 @@ def _check_youtube():
         return Check("YouTube key", False, "请求成功但无数据")
     return Check("YouTube key", True, "可读公开视频统计")
 
-def _check_rsshub():
-    import httpx
-    from iknowfirst.config import load_config
+def _check_rsshub(cfg) -> Check:
+    import httpx, feedparser
     from iknowfirst.sources.feeds import build_feeds
-    cfg = load_config(os.environ.get("CONFIG_PATH", "config.yaml"))
     feeds = build_feeds(cfg)
     if not feeds:
         return Check("RSSHub feed", False, "未构建出任何 feed")
-    import feedparser
-    # 取第一个 youtube feed 试抓
     f = next((x for x in feeds if x.source_type == "youtube"), feeds[0])
     parsed = feedparser.parse(f.url)
     n = len(parsed.entries)
-    return Check("RSSHub 首个 feed", n > 0, f"{f.label}: {n} 条" if n > 0 else f"{f.label}: 0 条(检查 RSSHub 是否在 {cfg.rsshub_base_url})")
+    return Check("RSSHub 首个 feed", n > 0,
+                 f"{f.label}: {n} 条" if n > 0 else f"{f.label}: 0 条(检查 RSSHub 是否在 {cfg.rsshub_base_url})")
 
 def main() -> int:
     logging.disable(logging.CRITICAL)
-    checks = [_check_config, _check_env, _check_agnes, _check_youtube, _check_rsshub]
+    from iknowfirst.config import load_config
+    try:
+        cfg = load_config(os.environ.get("CONFIG_PATH", "config.yaml"))
+    except Exception as e:
+        print(f"❌ config 加载 — {str(e)[:200]}")
+        print("\n❌ 预检有失败项,修复后再启动。")
+        return 1
+    checks = [
+        lambda: _check_config(cfg),
+        _check_env,
+        _check_agnes,
+        _check_youtube,
+        lambda: _check_rsshub(cfg),
+    ]
     results = run_checks(checks)
     print(format_report(results))
     ok = all_ok(results)

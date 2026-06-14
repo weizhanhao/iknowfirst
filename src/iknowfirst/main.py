@@ -2,7 +2,7 @@ from __future__ import annotations
 import logging, os
 from datetime import datetime
 from apscheduler.schedulers.blocking import BlockingScheduler
-from iknowfirst.config import load_config
+from iknowfirst.config import load_config, Config
 from iknowfirst.logging_setup import setup_logging
 from iknowfirst.db.session import make_session_factory
 from iknowfirst.db.repository import ItemRepository
@@ -23,7 +23,7 @@ from iknowfirst.engagement.sampler import EngagementSampler
 
 log = logging.getLogger(__name__)
 
-def build_llm(cfg):
+def build_llm(cfg: Config) -> FallbackLLM:
     primary = OpenAICompatibleLLM(cfg.llm.provider, cfg.llm.base_url,
                                   cfg.llm.resolved_api_key, cfg.llm.model)
     fb = None

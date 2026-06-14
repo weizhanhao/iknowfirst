@@ -3,8 +3,9 @@
 ## 部署（阿里云香港轻量，无域名/无代理）
 1. 安装 Docker + Docker Compose。
 2. `cp .env.example .env`，填入 Agnes/企微/YouTube 的真实值；`cp config.example.yaml config.yaml`，核对/修改信源与关键词。
-3. `docker compose up -d`（首次拉起 rsshub + mysql + app）。
-4. app 启动会先做"首启快照"（不补推历史），之后每 5 分钟轮询、命中→解读→推送。
+3. 部署前自检（可选但推荐）：在装好依赖的环境里 `python -m iknowfirst.preflight`，逐项检查 config/密钥/Agnes/YouTube/RSSHub 是否就绪；全绿再启动。
+4. `docker compose up -d`（首次拉起 rsshub + mysql + app）。
+5. app 启动会先做"首启快照"（不补推历史），之后每 5 分钟轮询、命中→解读→推送。
 
 ## 配置 LLM 降级（可选）
 在 `main.build_llm` 中把 fallback 换成第二个 `OpenAICompatibleLLM`（如 DeepSeek），各自用对应 env。
