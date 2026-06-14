@@ -42,6 +42,8 @@
 | 配置 | **YAML 配置文件**起步,网页后台留 v2 |
 | 轮询频率 | 每 **5 分钟** |
 | 技术栈 | **Python**(沿用用户既有后端栈),SQLAlchemy + yt-dlp + httpx + OpenAI SDK |
+| 选题自进化 | **TrendScout 模块(v1)**:定期用 LLM 从已采集内容流中发现"未在关键词库里的新热词/新模型名",推企微"建议新增关键词"由用户确认后并入。免费、无需额外搜索 API |
+| 默认信源/关键词 | 由 `deep-research` 调研产出(见 §6),覆盖 2026.6 当下主流大佬/频道/热词;用户可随时改 |
 
 ---
 
@@ -55,6 +57,8 @@
    │   去重(MySQL processed items),首启只记快照不补推
    ▼
 [2] Filter 召回 ──关键词匹配(读 YAML)──▶ 命中的入库,进入处理流水线
+   │   ▲
+   │   └─ TrendScout 选题侦察:定期用 LLM 从内容流里挖"新热词" → 推企微建议你扩充关键词
    │
    ├─────────────────────────────────────────┐
    ▼                                          ▼
@@ -134,6 +138,16 @@
 - 企微消息内容:标题、信源、作者、一句话摘要、亮点、要不要看、原始链接、(若有)热度增速、降级标注。
 - 推送结果记录到 `pushes` 表,失败重试(指数退避)。
 
+### 4.7 TrendScout 选题侦察 (v1) —— 关键词自进化
+
+解决"漏掉刚冒出来、还没配进关键词的新东西"的盲区。**关键设计:不依赖任何外部搜索 API,免费且自洽**——直接从系统自己已经在采集的内容流里挖新词。
+
+- **数据来源**:近 N 天(默认 7 天)采集到的所有条目标题/简介(`items` 表,含未命中关键词的 `skipped` 条目——它们正是潜在新热点)。
+- **行为**:每天定时(默认 08:30,赶在早间汇总前)把这批标题喂给 LLM,提示词:"找出这些标题里反复出现、但不在当前关键词库中的 AI 新模型名/新术语/新热点",产出**候选新关键词 + 出现频次 + 一句理由**。
+- **策略(已确认)**:**稳妥模式**——不自动并入,而是**推一条企微"📈 本周新热词建议:DeepSeek-V4 / Nano Banana 2 …,回复要加哪些"**,由用户确认后人工/半自动加入 YAML。
+- 可选增强:额外订阅 1–2 个 AI 资讯聚合 RSS(如 Hacker News AI、机器之心)经 RSSHub 进流,扩大新词来源面。
+- 容错:LLM 不可用则当天跳过,不影响主流程。
+
 ---
 
 ## 5. 数据模型 (MySQL)
@@ -149,26 +163,64 @@
 
 ## 6. 配置 (YAML 示例)
 
+> 以下默认值由 2026-06-14 的 `deep-research` 调研产出。**已核验 X handle 直接写入;YouTube channelId 仅写入调研中能确证的两个,其余用 `handle` 字段,部署时由程序解析成稳定 channelId**(避免写错 ID)。
+
 ```yaml
 poll_interval_minutes: 5
-
 rsshub_base_url: "http://localhost:1200"   # 本机部署的 RSSHub
 
 sources:
-  youtube_channels:        # RSSHub 路由会据此生成 feed
-    - { name: "Karpathy",        id: "UCXUPKJO5MZQDB_Q1bL1lwww" }
-    - { name: "TwoMinutePapers", id: "UCbfYPyITQ-7l4upoX8nvctg" }
-    - { name: "LexFridman",      id: "UCSHZKyawb77ixDdsGog4iWA" }
-  x_accounts:    [ "sama", "karpathy", "ylecun" ]
-  bilibili_uids: [ ]
-  arxiv_categories: [ "cs.AI", "cs.CL", "cs.LG" ]
+  youtube_channels:        # 有 channel_id 的直接用;只有 handle 的部署时解析
+    - { name: "Andrej Karpathy",        handle: "@AndrejKarpathy" }
+    - { name: "Yannic Kilcher",         channel_id: "UCZHmQk67mSJgfCCTn7xBfew" }
+    - { name: "Two Minute Papers",      handle: "@twominutepapers" }
+    - { name: "3Blue1Brown",            handle: "@3blue1brown" }
+    - { name: "Lex Fridman",            handle: "@lexfridman" }
+    - { name: "Dwarkesh Patel",         handle: "@DwarkeshPatel" }
+    - { name: "bycloud",                channel_id: "UCgfe2ooZD3VJPB6aJAnuQng" }
+    - { name: "AI Explained",           handle: "@aiexplained-official" }
+    - { name: "StatQuest",              handle: "@statquest" }
+    - { name: "AI Coffee Break",        handle: "@AICoffeeBreak" }      # 部署时核验
+    - { name: "ML Street Talk",         handle: "@MachineLearningStreetTalk" }  # 部署时核验
 
-keywords: [ "Sora", "GPT", "Gemini", "多模态", "RAG", "Agent", "具身智能", "扩散模型", "强化学习" ]
+  x_accounts: [ "karpathy", "ykilcher", "rasbt", "DrJimFan", "dwarkesh_sp",
+                "bycloudai", "joshuastarmer", "lexfridman", "sama", "ylecun" ]
+
+  bilibili_uids:           # UID 部署时按名字在 B站搜索确认(仅"跟李沐学AI"已知空间号)
+    - { name: "跟李沐学AI",            uid: "1567748478" }
+    - { name: "ZOMI酱",                uid: "" }
+    - { name: "chaofa用代码打点酱油",   uid: "" }
+    - { name: "飞天闪客",              uid: "" }
+    - { name: "梗直哥",                uid: "" }
+    - { name: "二次元的Datawhale",     uid: "" }
+
+  arxiv_categories: [ "cs.AI", "cs.CL", "cs.LG", "cs.CV", "cs.RO" ]
+  hf_daily_papers: true
+
+# 关键词按主题分组管理(匹配时全部展开为一个集合,大小写不敏感,中英文均匹配)
+keywords:
+  前沿模型: [ "GPT-5.5", "Claude Opus 4.8", "Gemini 3.5", "DeepSeek-V4", "Qwen3.6",
+             "Kimi K2", "GLM-5", "Grok 4", "Llama 4", "MoE", "1M context", "开源权重" ]
+  Agent: [ "agentic engineering", "智能体", "multi-agent", "agent swarm", "MCP",
+           "Model Context Protocol", "context engineering", "上下文工程", "LangGraph", "computer use" ]
+  AI编程: [ "Claude Code", "Codex", "Cursor", "Windsurf", "Gemini CLI", "SWE-bench", "Devin" ]
+  多模态视频: [ "Sora", "Veo", "Nano Banana", "Kling", "Runway", "图生视频", "lip-sync", "唇形同步" ]
+  推理训练: [ "RLVR", "GRPO", "test-time compute", "推理模型", "reasoning model",
+            "Mamba", "diffusion LLM", "扩散语言模型", "speculative decoding" ]
+  具身智能: [ "VLA", "世界模型", "world model", "具身智能", "GR00T", "Optimus",
+            "physical AI", "空间智能", "humanoid", "机器人" ]
+  其他热点: [ "SLM", "小模型", "端侧", "on-device", "超级智能", "superintelligence", "RAG", "向量数据库" ]
 
 engagement:
   enabled: true
   track_window_hours: 24
   sample_interval_minutes: 60
+
+trendscout:
+  enabled: true
+  run_time: "08:30"
+  lookback_days: 7
+  mode: "suggest"            # suggest(推企微建议) | auto(自动并入)
 
 llm:
   provider: "agnes"               # agnes | deepseek | gemini
@@ -217,5 +269,8 @@ push:
 
 ## 10. 版本边界
 
-- **v1**:YouTube + X + B站 + arXiv/HF;AI 深度解读;YouTube/B站 热度增速;YAML 配置;分级推送;阿里云香港部署。
-- **v2**:网页后台(IP:端口,无需域名)配置关键词/信源;arXiv/X 热度信号;X 官方 API(若需更稳)。
+- **v1**:YouTube + X + B站 + arXiv/HF;AI 深度解读;YouTube/B站 热度增速;**TrendScout 关键词自进化(建议模式)**;YAML 配置;分级推送;阿里云香港部署。
+- **v2**:
+  - **多角色评审团**(panel):对**重磅条目**用多个视角 LLM(技术新颖性/实用价值/适合谁/摘要)并行深挖,汇总成精读卡片;不拖慢普通条目的"第一时间"。
+  - **每周深度盘点**:用多智能体(可由 Claude 离线 Workflow 跑)出一份"本周 AI 全景报告"。
+  - 网页后台(IP:端口,无需域名)配置关键词/信源;arXiv/X 热度信号;X 官方 API(若需更稳)。
