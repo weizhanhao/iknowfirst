@@ -11,3 +11,8 @@ def test_single_sample_returns_zero():
 
 def test_empty_returns_zero():
     assert likes_per_hour([]) == 0.0
+
+def test_negative_growth_clamped_to_zero():
+    from datetime import datetime, timedelta
+    t0 = datetime(2026, 6, 14, 10, 0)
+    assert likes_per_hour([(t0, 5000), (t0 + timedelta(hours=1), 4000)]) == 0.0

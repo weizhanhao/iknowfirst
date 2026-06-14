@@ -9,6 +9,10 @@ class FallbackLLM:
         self._primary = primary
         self._fallback = fallback
 
+    @property
+    def name(self) -> str:
+        return f"fallback({getattr(self._primary, 'name', '?')}->{getattr(self._fallback, 'name', '?')})"
+
     def complete(self, system: str, user: str) -> str:
         try:
             return self._primary.complete(system, user)
@@ -16,4 +20,8 @@ class FallbackLLM:
             log.warning("primary LLM %s failed; trying fallback", getattr(self._primary, "name", "?"))
             if self._fallback is None:
                 raise
-            return self._fallback.complete(system, user)
+            try:
+                return self._fallback.complete(system, user)
+            except Exception:
+                log.error("fallback LLM %s also failed", getattr(self._fallback, "name", "?"))
+                raise

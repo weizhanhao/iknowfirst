@@ -6,7 +6,7 @@ class OpenAICompatibleLLM:
     def __init__(self, name: str, base_url: str, api_key: str, model: str):
         self.name = name
         self._model = model
-        self._client = OpenAI(base_url=base_url, api_key=api_key)
+        self._client = OpenAI(base_url=base_url, api_key=api_key, timeout=30.0)
 
     def complete(self, system: str, user: str) -> str:
         resp = self._client.chat.completions.create(

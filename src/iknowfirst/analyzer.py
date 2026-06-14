@@ -11,7 +11,7 @@ SYSTEM_PROMPT = (
     "\"recommendation\":要不要看/适合谁, \"value_score\":0-100整数价值分}。只输出 JSON。"
 )
 
-@dataclass
+@dataclass(frozen=True)
 class AnalysisResult:
     summary: str
     highlights: list[str]

@@ -10,4 +10,4 @@ def likes_per_hour(samples: list[tuple[datetime, int]]) -> float:
     hours = (t_last - t_first).total_seconds() / 3600.0
     if hours <= 0:
         return 0.0
-    return round((v_last - v_first) / hours, 2)
+    return max(0.0, round((v_last - v_first) / hours, 2))

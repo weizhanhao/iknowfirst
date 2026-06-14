@@ -9,6 +9,7 @@ def test_decide_tier_by_score_or_velocity():
     assert decide_tier(value_score=85, likes_per_hour=0, threshold=80) == "major"
     assert decide_tier(value_score=50, likes_per_hour=3000, threshold=80, velocity_major=2000) == "major"
     assert decide_tier(value_score=50, likes_per_hour=10, threshold=80) == "normal"
+    assert decide_tier(value_score=80, likes_per_hour=0, threshold=80) == "major"
 
 def test_analyze_parses_json_payload():
     payload = '{"summary":"讲了稀疏注意力","highlights":["DSA","省显存"],"recommendation":"推荐看","value_score":88}'
