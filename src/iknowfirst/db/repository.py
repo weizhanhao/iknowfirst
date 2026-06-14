@@ -1,7 +1,7 @@
 from __future__ import annotations
 from datetime import datetime
 from sqlalchemy import select, update
-from iknowfirst.db.models import Item
+from iknowfirst.db.models import Item, EngagementSample
 
 DEFAULT_BATCH_LIMIT = 500
 
@@ -45,4 +45,38 @@ class ItemRepository:
     def set_raw_text(self, item_id: int, raw_text: str) -> None:
         with self._sf() as s:
             s.execute(update(Item).where(Item.id == item_id).values(raw_text=raw_text))
+            s.commit()
+
+    def youtube_tracked_items(self, created_after: datetime) -> list[Item]:
+        with self._sf() as s:
+            rows = s.execute(
+                select(Item).where(
+                    Item.source_type == "youtube",
+                    Item.created_at >= created_after,
+                    Item.status.notin_(["seen", "skipped"]),
+                )
+            ).scalars().all()
+            for r in rows:
+                s.expunge(r)
+            return list(rows)
+
+    def add_engagement_sample(self, item_id: int, views: int, likes: int, comments: int,
+                              sampled_at: datetime | None = None) -> None:
+        with self._sf() as s:
+            kw = {"item_id": item_id, "views": views, "likes": likes, "comments": comments}
+            if sampled_at is not None:
+                kw["sampled_at"] = sampled_at
+            s.add(EngagementSample(**kw)); s.commit()
+
+    def likes_samples_for(self, item_id: int) -> list[tuple[datetime, int]]:
+        with self._sf() as s:
+            rows = s.execute(
+                select(EngagementSample.sampled_at, EngagementSample.likes)
+                .where(EngagementSample.item_id == item_id)
+            ).all()
+            return [(r[0], r[1]) for r in rows]
+
+    def mark_engagement_promoted(self, item_id: int) -> None:
+        with self._sf() as s:
+            s.execute(update(Item).where(Item.id == item_id).values(engagement_promoted=True))
             s.commit()

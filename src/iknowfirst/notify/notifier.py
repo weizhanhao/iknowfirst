@@ -45,6 +45,15 @@ class Notifier:
     def digest_queue_size(self) -> int:
         return len(self._digest)
 
+    def push_spike(self, title: str, url: str, author: str | None,
+                   source_type: str, likes_per_hour: float) -> None:
+        label = _SOURCE_LABEL.get(source_type, source_type)
+        lines = [f"### 🔥 热度飙升：{title}",
+                 f"> {label}" + (f" · {author}" if author else ""),
+                 f"**热度**：约 +{int(likes_per_hour)} 赞/小时，正在被大量关注",
+                 f"[原文链接]({url})"]
+        self._safe_send("🔥 **AI 动态 · 热度飙升**\n\n" + "\n".join(lines))
+
     def flush_digest(self) -> None:
         if not self._digest:
             return

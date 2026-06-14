@@ -1,5 +1,6 @@
 from __future__ import annotations
 import logging, os
+from datetime import datetime
 from apscheduler.schedulers.blocking import BlockingScheduler
 from iknowfirst.config import load_config
 from iknowfirst.logging_setup import setup_logging
@@ -17,6 +18,8 @@ from iknowfirst.notify.notifier import Notifier
 from iknowfirst.trendscout import TrendScout
 from iknowfirst.pipeline import Pipeline
 from iknowfirst.scheduler import run_poll_cycle
+from iknowfirst.engagement.youtube_api import fetch_stats
+from iknowfirst.engagement.sampler import EngagementSampler
 
 log = logging.getLogger(__name__)
 
@@ -59,6 +62,15 @@ def main():
                 titles=[i.title for i in repo.items_by_status("skipped")],
                 current_keywords=cfg.all_keywords()),
             "cron", hour=int(th), minute=int(tm))
+    yt_key = os.environ.get("YOUTUBE_API_KEY")
+    if cfg.engagement.enabled and yt_key:
+        sampler = EngagementSampler(
+            repo, fetch=lambda vid: fetch_stats(vid, yt_key), notifier=notifier,
+            velocity_major_threshold=cfg.push.velocity_major_threshold,
+            track_window_hours=cfg.engagement.track_window_hours)
+        sched.add_job(lambda: sampler.run_once(datetime.now()),
+                      "interval", minutes=cfg.engagement.sample_interval_minutes)
+        log.info("engagement sampler registered: every %dmin", cfg.engagement.sample_interval_minutes)
     log.info("iknowfirst started: %d feeds, poll every %dmin", len(feeds), cfg.poll_interval_minutes)
     sched.start()
 

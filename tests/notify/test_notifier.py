@@ -58,3 +58,15 @@ def test_safe_send_swallows_wecom_exception():
     n = Notifier(BrokenWecom())
     n.handle("x", "u", None, "youtube", _res("major"), 0, False)  # major 即时推,不得抛
     assert n.digest_queue_size() == 0
+
+def test_push_spike_sends_correct_content():
+    class FakeWecom:
+        def __init__(self): self.sent = []
+        def send_markdown(self, content): self.sent.append(content)
+    wecom = FakeWecom()
+    n = Notifier(wecom)
+    n.push_spike(title="热门视频", url="http://y/1", author="K",
+                 source_type="youtube", likes_per_hour=2500.0)
+    assert len(wecom.sent) == 1
+    assert "热度飙升" in wecom.sent[0]
+    assert "赞/小时" in wecom.sent[0]

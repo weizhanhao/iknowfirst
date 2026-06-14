@@ -1,6 +1,6 @@
 from __future__ import annotations
 from datetime import datetime
-from sqlalchemy import String, Integer, DateTime, Text, JSON, ForeignKey, func
+from sqlalchemy import String, Integer, DateTime, Text, JSON, ForeignKey, func, Boolean
 from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column, relationship
 
 class Base(DeclarativeBase):
@@ -18,6 +18,7 @@ class Item(Base):
     raw_text: Mapped[str | None] = mapped_column(Text, nullable=True)
     status: Mapped[str] = mapped_column(String(16), default="seen", index=True)
     created_at: Mapped[datetime] = mapped_column(DateTime, server_default=func.now())
+    engagement_promoted: Mapped[bool] = mapped_column(Boolean, default=False)
     analyses: Mapped[list["Analysis"]] = relationship(back_populates="item")
     samples: Mapped[list["EngagementSample"]] = relationship(back_populates="item")
 
