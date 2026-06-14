@@ -1,9 +1,10 @@
 from __future__ import annotations
 import logging
 from dataclasses import dataclass
-from datetime import datetime
+from datetime import datetime, timezone
 from typing import Callable
 import feedparser
+from iknowfirst.db.models import Item
 from iknowfirst.db.repository import ItemRepository
 from iknowfirst.sources.feeds import Feed
 
@@ -26,7 +27,7 @@ def default_parser(feed: Feed) -> list[ParsedEntry]:
             continue
         published = None
         if getattr(e, "published_parsed", None):
-            published = datetime(*e.published_parsed[:6])
+            published = datetime(*e.published_parsed[:6], tzinfo=timezone.utc)
         out.append(ParsedEntry(
             external_id=ext, title=getattr(e, "title", ""),
             url=getattr(e, "link", ""), author=getattr(e, "author", None),
@@ -38,7 +39,7 @@ class Collector:
         self._repo = repo
         self._parse = parser
 
-    def collect_feed(self, feed: Feed, first_run: bool):
+    def collect_feed(self, feed: Feed, first_run: bool) -> list[Item]:
         try:
             entries = self._parse(feed)
         except Exception:

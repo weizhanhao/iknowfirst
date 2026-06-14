@@ -29,3 +29,24 @@ def test_build_feeds_covers_sources_and_types():
     assert "http://rss:1200/arxiv/cs.AI" in urls
     # uid 为空的 B 站源被跳过
     assert types == {"youtube", "x", "bilibili", "arxiv"}
+
+def test_hf_daily_papers_feed():
+    from iknowfirst.config import Config
+    cfg = Config.model_validate({
+        "rsshub_base_url": "http://rss:1200",
+        "sources": {
+            "youtube_channels": [],
+            "x_accounts": [],
+            "bilibili_uids": [],
+            "arxiv_categories": [],
+            "hf_daily_papers": True,
+        },
+        "keywords": {},
+        "llm": {"provider": "agnes", "base_url": "x", "model": "m", "api_key_env": "AGNES_API_KEY"},
+        "push": {"wecom_webhook_env": "WECOM_WEBHOOK_URL"},
+    })
+    feeds = build_feeds(cfg)
+    urls = {f.url for f in feeds}
+    assert "http://rss:1200/huggingface/daily-papers" in urls
+    hf_feed = next(f for f in feeds if "huggingface" in f.url)
+    assert hf_feed.source_type == "arxiv"

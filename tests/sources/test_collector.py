@@ -1,16 +1,6 @@
-import pytest
-from sqlalchemy import create_engine
-from sqlalchemy.orm import sessionmaker
-from iknowfirst.db.models import Base
-from iknowfirst.db.repository import ItemRepository
 from iknowfirst.sources.collector import Collector, ParsedEntry
 from iknowfirst.sources.feeds import Feed
 
-@pytest.fixture
-def repo():
-    engine = create_engine("sqlite://")
-    Base.metadata.create_all(engine)
-    return ItemRepository(sessionmaker(engine))
 
 def _entries():
     return [ParsedEntry(external_id="v1", title="GPT-5.5", url="http://y/v1", author="K", published_at=None),
