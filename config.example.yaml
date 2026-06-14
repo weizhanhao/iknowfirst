@@ -3,28 +3,29 @@ rsshub_base_url: "http://localhost:1200"
 
 sources:
   youtube_channels:
-    - { name: "Andrej Karpathy",        handle: "@AndrejKarpathy" }
+    - { name: "Andrej Karpathy",        channel_id: "UCXUPKJO5MZQN11PqgIvyuvQ" }
     - { name: "Yannic Kilcher",         channel_id: "UCZHmQk67mSJgfCCTn7xBfew" }
-    - { name: "Two Minute Papers",      handle: "@twominutepapers" }
-    - { name: "3Blue1Brown",            handle: "@3blue1brown" }
-    - { name: "Lex Fridman",            handle: "@lexfridman" }
-    - { name: "Dwarkesh Patel",         handle: "@DwarkeshPatel" }
+    - { name: "Two Minute Papers",      channel_id: "UCbfYPyITQ-7l4upoX8nvctg" }
+    - { name: "3Blue1Brown",            channel_id: "UCYO_jab_esuFRV4b17AJtAw" }
+    - { name: "Lex Fridman",            channel_id: "UCSHZKyawb77ixDdsGog4iWA" }
+    - { name: "Dwarkesh Patel",         channel_id: "UCXl4i9dYBrFOabk0xGmbkRA" }
     - { name: "bycloud",                channel_id: "UCgfe2ooZD3VJPB6aJAnuQng" }
-    - { name: "AI Explained",           handle: "@aiexplained-official" }
-    - { name: "StatQuest",              handle: "@statquest" }
-    - { name: "AI Coffee Break",        handle: "@AICoffeeBreak" }
-    - { name: "ML Street Talk",         handle: "@MachineLearningStreetTalk" }
+    - { name: "AI Explained",           channel_id: "UCNJ1Ymd5yFuUPtn21xtRbbw" }
+    - { name: "StatQuest",              channel_id: "UCtYLUTtgS3k1Fg4y5tAhLbw" }
+    - { name: "AI Coffee Break",        channel_id: "UCobqgqE4i5Kf7wrxRxhToQA" }
+    - { name: "ML Street Talk",         channel_id: "UCMLtBahI5DMrt0NPvDSoIRQ" }
 
   x_accounts: [ "karpathy", "ykilcher", "rasbt", "DrJimFan", "dwarkesh_sp",
                 "bycloudai", "joshuastarmer", "lexfridman", "sama", "ylecun" ]
 
   bilibili_uids:
     - { name: "跟李沐学AI",            uid: "1567748478" }
-    - { name: "ZOMI酱",                uid: "" }
+    - { name: "ZOMI酱",                uid: "517221395" }
+    - { name: "飞天闪客",              uid: "325864133" }
+    - { name: "二次元的Datawhale",     uid: "431850986" }
+    # 待你确认 UID(自动解析未命中/疑同名,打开 space.bilibili.com 搜确认后填):
     - { name: "chaofa用代码打点酱油",   uid: "" }
-    - { name: "飞天闪客",              uid: "" }
     - { name: "梗直哥",                uid: "" }
-    - { name: "二次元的Datawhale",     uid: "" }
 
   arxiv_categories: [ "cs.AI", "cs.CL", "cs.LG", "cs.CV", "cs.RO" ]
   hf_daily_papers: true
