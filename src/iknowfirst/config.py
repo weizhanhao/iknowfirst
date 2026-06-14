@@ -41,7 +41,9 @@ class LLM(BaseModel):
     base_url: str
     model: str
     api_key_env: str
-    fallback: str | None = None
+    fallback_base_url: str | None = None
+    fallback_model: str | None = None
+    fallback_api_key_env: str | None = None
 
     @property
     def resolved_api_key(self) -> str:

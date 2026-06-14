@@ -51,6 +51,39 @@ def test_load_config_expands_env_in_values(tmp_path, monkeypatch):
     assert cfg.llm.base_url == "https://api.example.com/v1"
 
 
+def test_llm_fallback_fields_default_to_none():
+    from iknowfirst.config import LLM
+    llm = LLM(provider="agnes", base_url="http://x/v1", model="m", api_key_env="SOME_KEY")
+    assert llm.fallback_base_url is None
+    assert llm.fallback_model is None
+    assert llm.fallback_api_key_env is None
+
+
+def test_llm_fallback_fields_parsed_from_yaml(tmp_path, monkeypatch):
+    import textwrap
+    monkeypatch.setenv("AGNES_API_KEY", "k")
+    cfg_file = tmp_path / "c.yaml"
+    cfg_file.write_text(textwrap.dedent("""
+        rsshub_base_url: "http://r:1200"
+        sources: {youtube_channels: [], x_accounts: [], bilibili_uids: [], arxiv_categories: []}
+        keywords: {}
+        llm:
+          provider: agnes
+          base_url: "http://x/v1"
+          model: m
+          api_key_env: AGNES_API_KEY
+          fallback_base_url: "https://api.deepseek.com/v1"
+          fallback_model: "deepseek-chat"
+          fallback_api_key_env: "DEEPSEEK_API_KEY"
+        push: {wecom_webhook_env: WECOM_WEBHOOK_URL}
+    """), encoding="utf-8")
+    from iknowfirst.config import load_config
+    cfg = load_config(str(cfg_file))
+    assert cfg.llm.fallback_base_url == "https://api.deepseek.com/v1"
+    assert cfg.llm.fallback_model == "deepseek-chat"
+    assert cfg.llm.fallback_api_key_env == "DEEPSEEK_API_KEY"
+
+
 def test_push_config_has_default_velocity_major_threshold():
     push = PushConfig(wecom_webhook_env="WECOM_WEBHOOK_URL")
     assert push.velocity_major_threshold == 2000.0

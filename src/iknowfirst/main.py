@@ -26,7 +26,12 @@ log = logging.getLogger(__name__)
 def build_llm(cfg):
     primary = OpenAICompatibleLLM(cfg.llm.provider, cfg.llm.base_url,
                                   cfg.llm.resolved_api_key, cfg.llm.model)
-    return FallbackLLM(primary, fallback=None)  # v1 先不接备用实例；接法见 README
+    fb = None
+    if cfg.llm.fallback_base_url and cfg.llm.fallback_model and cfg.llm.fallback_api_key_env:
+        fb_key = os.environ.get(cfg.llm.fallback_api_key_env)
+        if fb_key:
+            fb = OpenAICompatibleLLM("fallback", cfg.llm.fallback_base_url, fb_key, cfg.llm.fallback_model)
+    return FallbackLLM(primary, fb)
 
 def main():
     setup_logging()

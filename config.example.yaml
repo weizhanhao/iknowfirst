@@ -59,7 +59,10 @@ llm:
   base_url: "${AGNES_BASE_URL}"
   model: "agnes-2.0-flash"
   api_key_env: "AGNES_API_KEY"
-  fallback: "deepseek"
+  # 可选备用(主力失败自动降级);取消注释并在 .env 填好对应 key 才启用:
+  # fallback_base_url: "${DEEPSEEK_BASE_URL}"
+  # fallback_model: "deepseek-chat"
+  # fallback_api_key_env: "DEEPSEEK_API_KEY"
 
 push:
   wecom_webhook_env: "WECOM_WEBHOOK_URL"
