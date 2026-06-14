@@ -1,0 +1,66 @@
+poll_interval_minutes: 5
+rsshub_base_url: "http://localhost:1200"
+
+sources:
+  youtube_channels:
+    - { name: "Andrej Karpathy",        handle: "@AndrejKarpathy" }
+    - { name: "Yannic Kilcher",         channel_id: "UCZHmQk67mSJgfCCTn7xBfew" }
+    - { name: "Two Minute Papers",      handle: "@twominutepapers" }
+    - { name: "3Blue1Brown",            handle: "@3blue1brown" }
+    - { name: "Lex Fridman",            handle: "@lexfridman" }
+    - { name: "Dwarkesh Patel",         handle: "@DwarkeshPatel" }
+    - { name: "bycloud",                channel_id: "UCgfe2ooZD3VJPB6aJAnuQng" }
+    - { name: "AI Explained",           handle: "@aiexplained-official" }
+    - { name: "StatQuest",              handle: "@statquest" }
+    - { name: "AI Coffee Break",        handle: "@AICoffeeBreak" }
+    - { name: "ML Street Talk",         handle: "@MachineLearningStreetTalk" }
+
+  x_accounts: [ "karpathy", "ykilcher", "rasbt", "DrJimFan", "dwarkesh_sp",
+                "bycloudai", "joshuastarmer", "lexfridman", "sama", "ylecun" ]
+
+  bilibili_uids:
+    - { name: "跟李沐学AI",            uid: "1567748478" }
+    - { name: "ZOMI酱",                uid: "" }
+    - { name: "chaofa用代码打点酱油",   uid: "" }
+    - { name: "飞天闪客",              uid: "" }
+    - { name: "梗直哥",                uid: "" }
+    - { name: "二次元的Datawhale",     uid: "" }
+
+  arxiv_categories: [ "cs.AI", "cs.CL", "cs.LG", "cs.CV", "cs.RO" ]
+  hf_daily_papers: true
+
+keywords:
+  前沿模型: [ "GPT-5.5", "Claude Opus 4.8", "Gemini 3.5", "DeepSeek-V4", "Qwen3.6",
+             "Kimi K2", "GLM-5", "Grok 4", "Llama 4", "MoE", "1M context", "开源权重" ]
+  Agent: [ "agentic engineering", "智能体", "multi-agent", "agent swarm", "MCP",
+           "Model Context Protocol", "context engineering", "上下文工程", "LangGraph", "computer use" ]
+  AI编程: [ "Claude Code", "Codex", "Cursor", "Windsurf", "Gemini CLI", "SWE-bench", "Devin" ]
+  多模态视频: [ "Sora", "Veo", "Nano Banana", "Kling", "Runway", "图生视频", "lip-sync", "唇形同步" ]
+  推理训练: [ "RLVR", "GRPO", "test-time compute", "推理模型", "reasoning model",
+            "Mamba", "diffusion LLM", "扩散语言模型", "speculative decoding" ]
+  具身智能: [ "VLA", "世界模型", "world model", "具身智能", "GR00T", "Optimus",
+            "physical AI", "空间智能", "humanoid", "机器人" ]
+  其他热点: [ "SLM", "小模型", "端侧", "on-device", "超级智能", "superintelligence", "RAG", "向量数据库" ]
+
+engagement:
+  enabled: true
+  track_window_hours: 24
+  sample_interval_minutes: 60
+
+trendscout:
+  enabled: true
+  run_time: "08:30"
+  lookback_days: 7
+  mode: "suggest"
+
+llm:
+  provider: "agnes"
+  base_url: "${AGNES_BASE_URL}"
+  model: "agnes-2.0-flash"
+  api_key_env: "AGNES_API_KEY"
+  fallback: "deepseek"
+
+push:
+  wecom_webhook_env: "WECOM_WEBHOOK_URL"
+  major_value_threshold: 80
+  digest_times: [ "09:00", "20:00" ]
