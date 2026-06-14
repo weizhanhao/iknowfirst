@@ -1,12 +1,18 @@
 from __future__ import annotations
 import os
 import yaml
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, model_validator
 
 class YoutubeChannel(BaseModel):
     name: str
     handle: str | None = None
     channel_id: str | None = None
+
+    @model_validator(mode="after")
+    def require_handle_or_channel_id(self) -> "YoutubeChannel":
+        if self.handle is None and self.channel_id is None:
+            raise ValueError("youtube channel needs handle or channel_id")
+        return self
 
 class BilibiliUp(BaseModel):
     name: str
@@ -44,7 +50,7 @@ class LLM(BaseModel):
             raise RuntimeError(f"missing env var {self.api_key_env} for LLM api key")
         return key
 
-class Push(BaseModel):
+class PushConfig(BaseModel):
     wecom_webhook_env: str
     major_value_threshold: int = 80
     digest_times: list[str] = Field(default_factory=lambda: ["09:00", "20:00"])
@@ -64,7 +70,7 @@ class Config(BaseModel):
     engagement: Engagement = Field(default_factory=Engagement)
     trendscout: TrendScout = Field(default_factory=TrendScout)
     llm: LLM
-    push: Push
+    push: PushConfig
 
     def all_keywords(self) -> set[str]:
         out: set[str] = set()

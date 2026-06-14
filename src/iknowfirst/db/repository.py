@@ -3,6 +3,8 @@ from datetime import datetime
 from sqlalchemy import select, update
 from iknowfirst.db.models import Item
 
+DEFAULT_BATCH_LIMIT = 500
+
 class ItemRepository:
     """封装 items 表的数据访问，业务层不直接写 SQL（便于迁移）。"""
     def __init__(self, session_factory):
@@ -26,9 +28,9 @@ class ItemRepository:
             s.expunge(item)
             return item
 
-    def items_by_status(self, status: str) -> list[Item]:
+    def items_by_status(self, status: str, limit: int = DEFAULT_BATCH_LIMIT) -> list[Item]:
         with self._sf() as s:
-            rows = s.execute(select(Item).where(Item.status == status)).scalars().all()
+            rows = s.execute(select(Item).where(Item.status == status).limit(limit)).scalars().all()
             for r in rows:
                 s.expunge(r)
             return list(rows)

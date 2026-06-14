@@ -21,3 +21,9 @@ def test_set_status_and_fetch_matched(repo):
     assert [i.external_id for i in matched] == ["c"]
     repo.set_status(item.id, "analyzed")
     assert repo.items_by_status("matched") == []
+
+def test_set_raw_text(repo):
+    item = repo.add_new("youtube", "d", "标题D", "http://y/d", author=None, published_at=None, status="matched")
+    repo.set_raw_text(item.id, "字幕正文")
+    got = repo.items_by_status("matched")[0]
+    assert got.raw_text == "字幕正文"
