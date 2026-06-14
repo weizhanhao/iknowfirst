@@ -9,7 +9,7 @@ class Pipeline:
     def __init__(self, repo, keywords: set[str], fetcher, analyzer, notifier,
                  likes_per_hour_provider=None):
         self._repo = repo
-        self._keywords = keywords
+        self._keywords = {k.lower() for k in keywords}
         self._fetcher = fetcher
         self._analyzer = analyzer
         self._notifier = notifier
@@ -34,3 +34,4 @@ class Pipeline:
             self._repo.set_status(item.id, "analyzed")
         except Exception:
             log.exception("pipeline failed for item %s", item.external_id)
+            self._repo.set_status(item.id, "error")

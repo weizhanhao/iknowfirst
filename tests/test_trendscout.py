@@ -29,3 +29,10 @@ def test_empty_titles_skips_llm():
     ts = TrendScout(FakeLLM('{"new_keywords":["x"]}'), wecom, mode="suggest")
     assert ts.run(titles=[], current_keywords=set()) == []
     assert wecom.sent == []
+
+def test_non_suggest_mode_returns_keywords_without_sending():
+    wecom = FakeWecom()
+    ts = TrendScout(FakeLLM('{"new_keywords":["MCP"]}'), wecom, mode="auto")
+    added = ts.run(titles=["t1"], current_keywords=set())
+    assert added == ["MCP"]
+    assert wecom.sent == []

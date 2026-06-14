@@ -42,3 +42,15 @@ def test_pipeline_skips_when_no_keyword_match():
     p.process(item)
     assert notifier.handled == []
     assert repo.items_by_status("skipped")[0].external_id == "v2"
+
+def test_pipeline_sets_error_status_on_failure():
+    repo = _repo()
+    item = repo.add_new("youtube", "v9", "GPT-5.5 解读", "http://y/v9", None, None, status="new")
+    class BoomFetcher:
+        def fetch(self, item): raise RuntimeError("fetch failed")
+    notifier = FakeNotifier()
+    p = Pipeline(repo, keywords={"gpt-5.5"}, fetcher=BoomFetcher(),
+                 analyzer=FakeAnalyzer(), notifier=notifier)
+    p.process(item)                                  # 不抛
+    assert notifier.handled == []
+    assert repo.items_by_status("error")[0].external_id == "v9"
