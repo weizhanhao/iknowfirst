@@ -38,6 +38,8 @@ def _download_caption_text(tracks) -> str | None:
         parts = [seg.get("utf8", "") for ev in data.get("events", []) for seg in ev.get("segs", [])]
         text = "".join(parts).strip()
         return text or None
+    if track.get("ext") != "vtt":
+        return None
     # vtt：丢掉时间轴/序号行
     lines = [ln for ln in resp.text.splitlines()
              if ln and "-->" not in ln and not ln.strip().isdigit() and ln.strip() != "WEBVTT"]

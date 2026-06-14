@@ -14,6 +14,19 @@ def test_x_and_bilibili_use_title_plus_raw():
     res = d.fetch(item)
     assert "新模型发布" in res.text and "详情见视频" in res.text
 
+    bili_item = Item(source_type="bilibili", external_id="b1", title="AI绘画教程", url="http://b/1", raw_text="手把手教你用AI画图")
+    bili_res = d.fetch(bili_item)
+    assert "AI绘画教程" in bili_res.text and "手把手教你用AI画图" in bili_res.text
+
+
+def test_youtube_without_fetcher_is_degraded():
+    d = FetcherDispatch(youtube=None)
+    item = Item(source_type="youtube", external_id="v2", title="模型发布",
+                url="http://y/v2", raw_text="简介文字")
+    res = d.fetch(item)
+    assert res.degraded is True
+    assert res.note is not None
+
 def test_youtube_delegates_to_injected_fetcher():
     class FakeYT:
         def fetch(self, item):
