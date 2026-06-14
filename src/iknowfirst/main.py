@@ -28,7 +28,10 @@ def build_llm(cfg):
 def main():
     setup_logging()
     cfg = load_config(os.environ.get("CONFIG_PATH", "config.yaml"))
-    sf = make_session_factory(os.environ["DATABASE_URL"])
+    db_url = os.environ.get("DATABASE_URL")
+    if not db_url:
+        raise RuntimeError("missing env var DATABASE_URL")
+    sf = make_session_factory(db_url)
     repo = ItemRepository(sf)
     feeds = build_feeds(cfg)
     collector = Collector(repo)

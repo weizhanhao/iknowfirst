@@ -8,6 +8,7 @@ log = logging.getLogger(__name__)
 
 def run_poll_cycle(collector: Collector, feeds: list[Feed], pipeline: Pipeline,
                    first_run: bool) -> None:
+    log.debug("poll cycle: %d feeds, first_run=%s", len(feeds), first_run)
     for feed in feeds:
         new_items = collector.collect_feed(feed, first_run=first_run)
         for item in new_items:
