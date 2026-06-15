@@ -12,6 +12,15 @@ def test_set_status_and_fetch_matched(repo):
     repo.set_status(item.id, "analyzed")
     assert repo.items_by_status("matched") == []
 
+def test_add_new_truncates_overlong_fields(repo):
+    long_author = "作者," * 300  # 远超 255
+    item = repo.add_new("arxiv", "x:1", "标" * 600, "http://a/" + "u" * 1200,
+                        author=long_author, published_at=None, status="seen")
+    got = repo.items_by_status("seen")[0]
+    assert len(got.author) <= 255
+    assert len(got.title) <= 512
+    assert len(got.url) <= 1024
+
 def test_set_raw_text(repo):
     item = repo.add_new("youtube", "d", "标题D", "http://y/d", author=None, published_at=None, status="matched")
     repo.set_raw_text(item.id, "字幕正文")

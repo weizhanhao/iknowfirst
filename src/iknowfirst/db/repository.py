@@ -22,6 +22,12 @@ class ItemRepository:
     def add_new(self, source_type: str, external_id: str, title: str, url: str,
                 author: str | None, published_at: datetime | None, status: str,
                 raw_text: str | None = None) -> Item:
+        # 外部数据边界防御:截断超长字段以适配列宽(如 arXiv 多作者列表)
+        source_type = (source_type or "")[:16]
+        external_id = (external_id or "")[:255]
+        title = (title or "")[:512]
+        url = (url or "")[:1024]
+        author = author[:255] if author else None
         with self._sf() as s:
             item = Item(source_type=source_type, external_id=external_id, title=title,
                         url=url, author=author, published_at=published_at, status=status,
