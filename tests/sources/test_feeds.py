@@ -22,11 +22,14 @@ def test_build_feeds_covers_sources_and_types():
     feeds = build_feeds(_cfg())
     urls = {f.url for f in feeds}
     types = {f.source_type for f in feeds}
-    assert "http://rss:1200/youtube/channel/UC123" in urls
+    # channel_id 走 YouTube 官方原生 RSS
+    assert "https://www.youtube.com/feeds/videos.xml?channel_id=UC123" in urls
+    # 仅 handle 退回 RSSHub
     assert "http://rss:1200/youtube/user/@two" in urls
     assert "http://rss:1200/twitter/user/karpathy" in urls
     assert "http://rss:1200/bilibili/user/video/1567748478" in urls
-    assert "http://rss:1200/arxiv/cs.AI" in urls
+    # arXiv 走官方原生 RSS
+    assert "http://export.arxiv.org/rss/cs.AI" in urls
     # uid 为空的 B 站源被跳过
     assert types == {"youtube", "x", "bilibili", "arxiv"}
 
