@@ -54,8 +54,9 @@ class Collector:
             if e.external_id in seen:
                 continue
             status = "seen" if first_run else "new"
+            # 用配置里的源名字(频道/账号/类别)作为"来源",比原始 author 更清晰一致
             item = self._repo.add_new(feed.source_type, e.external_id, e.title, e.url,
-                                      e.author, e.published_at, status=status,
+                                      feed.label, e.published_at, status=status,
                                       raw_text=e.summary)
             if not first_run:
                 new_items.append(item)

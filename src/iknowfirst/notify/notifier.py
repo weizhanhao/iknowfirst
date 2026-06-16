@@ -9,8 +9,9 @@ _SOURCE_LABEL = {"youtube": "YouTube", "x": "X", "bilibili": "B站", "arxiv": "�
 def format_card(title: str, url: str, author: str | None, source_type: str,
                 res: AnalysisResult, likes_per_hour: float, degraded: bool) -> str:
     label = _SOURCE_LABEL.get(source_type, source_type)
+    src = f"📍 来源：{author} · {label}" if author else f"📍 来源：{label}"
     lines = [f"### {title}",
-             f"> {label}" + (f" · {author}" if author else ""),
+             f"> {src}",
              f"**摘要**：{res.summary}"]
     if res.highlights:
         lines.append("**亮点**：" + "；".join(res.highlights))
@@ -48,8 +49,9 @@ class Notifier:
     def push_spike(self, title: str, url: str, author: str | None,
                    source_type: str, likes_per_hour: float) -> None:
         label = _SOURCE_LABEL.get(source_type, source_type)
+        src = f"📍 来源：{author} · {label}" if author else f"📍 来源：{label}"
         lines = [f"### 🔥 热度飙升：{title}",
-                 f"> {label}" + (f" · {author}" if author else ""),
+                 f"> {src}",
                  f"**热度**：约 +{int(likes_per_hour)} 赞/小时，正在被大量关注",
                  f"[原文链接]({url})"]
         self._safe_send("🔥 **AI 动态 · 热度飙升**\n\n" + "\n".join(lines))
