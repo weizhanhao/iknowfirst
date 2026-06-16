@@ -56,6 +56,7 @@ class PushConfig(BaseModel):
     wecom_webhook_env: str
     major_value_threshold: int = 80
     velocity_major_threshold: float = 2000.0
+    arxiv_major_threshold: int = 95  # 论文(高产源)只在此分以上才推,避免刷屏
     digest_times: list[str] = Field(default_factory=lambda: ["09:00", "20:00"])
 
     @property

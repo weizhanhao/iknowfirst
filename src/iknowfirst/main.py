@@ -49,7 +49,8 @@ def main():
     wecom = WecomClient(cfg.push.webhook_url)
     notifier = Notifier(wecom)
     trendscout = TrendScout(llm, wecom, cfg.trendscout.mode)
-    pipeline = Pipeline(repo, cfg.all_keywords(), fetcher, analyzer, notifier)
+    pipeline = Pipeline(repo, cfg.all_keywords(), fetcher, analyzer, notifier,
+                        arxiv_major_threshold=cfg.push.arxiv_major_threshold)
 
     # 启动即做一次首启快照（不补推历史）
     run_poll_cycle(collector, feeds, pipeline, first_run=True)

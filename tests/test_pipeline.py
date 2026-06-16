@@ -43,6 +43,40 @@ def test_pipeline_skips_when_no_keyword_match():
     assert notifier.handled == []
     assert repo.items_by_status("skipped")[0].external_id == "v2"
 
+class ScoreAnalyzer:
+    def __init__(self, score): self._score = score
+    def analyze(self, title, text, likes_per_hour=0.0):
+        tier = "major" if self._score >= 80 else "normal"
+        return AnalysisResult("摘要", [], "看", self._score, tier)
+
+def test_arxiv_below_super_threshold_not_pushed():
+    repo = _repo()
+    item = repo.add_new("arxiv", "a1", "Agent 论文", "http://a/1", None, None, status="new")
+    notifier = FakeNotifier()
+    p = Pipeline(repo, keywords={"agent"}, fetcher=FakeFetcher(),
+                 analyzer=ScoreAnalyzer(88), notifier=notifier, arxiv_major_threshold=95)
+    p.process(item)
+    assert notifier.handled == []                      # 88 < 95,论文不推
+    assert repo.items_by_status("analyzed")[0].external_id == "a1"
+
+def test_arxiv_super_major_is_pushed():
+    repo = _repo()
+    item = repo.add_new("arxiv", "a2", "Agent 重磅论文", "http://a/2", None, None, status="new")
+    notifier = FakeNotifier()
+    p = Pipeline(repo, keywords={"agent"}, fetcher=FakeFetcher(),
+                 analyzer=ScoreAnalyzer(96), notifier=notifier, arxiv_major_threshold=95)
+    p.process(item)
+    assert len(notifier.handled) == 1                  # 96 >= 95,推
+
+def test_video_unaffected_by_arxiv_threshold():
+    repo = _repo()
+    item = repo.add_new("youtube", "v3", "Agent 视频", "http://y/v3", None, None, status="new")
+    notifier = FakeNotifier()
+    p = Pipeline(repo, keywords={"agent"}, fetcher=FakeFetcher(),
+                 analyzer=ScoreAnalyzer(85), notifier=notifier, arxiv_major_threshold=95)
+    p.process(item)
+    assert len(notifier.handled) == 1                  # 视频不受论文门槛影响
+
 def test_pipeline_sets_error_status_on_failure():
     repo = _repo()
     item = repo.add_new("youtube", "v9", "GPT-5.5 解读", "http://y/v9", None, None, status="new")
