@@ -7,7 +7,8 @@ log = logging.getLogger(__name__)
 
 class Pipeline:
     def __init__(self, repo, keywords: set[str], fetcher, analyzer, notifier,
-                 likes_per_hour_provider=None, arxiv_major_threshold: int = 95):
+                 likes_per_hour_provider=None, arxiv_major_threshold: int = 95,
+                 keyword_required_sources: frozenset[str] = frozenset({"arxiv", "x"})):
         self._repo = repo
         self._keywords = {k.lower() for k in keywords}
         self._fetcher = fetcher
@@ -15,14 +16,17 @@ class Pipeline:
         self._notifier = notifier
         # 论文(高产源)只在"超级重磅"分数以上才推,否则解读后丢弃,避免刷屏
         self._arxiv_major_threshold = arxiv_major_threshold
+        # 仅这些高产源需要关键词过滤;视频源(手挑频道)新内容一律处理
+        self._keyword_required_sources = keyword_required_sources
         # 可选：item -> likes/hour 回调（热度追踪结果）；默认 0
         self._lph = likes_per_hour_provider or (lambda item: 0.0)
 
     def process(self, item: Item) -> None:
-        hay = f"{item.title} {item.raw_text or ''}"
-        if not match_keywords(hay, self._keywords):
-            self._repo.set_status(item.id, "skipped")
-            return
+        if item.source_type in self._keyword_required_sources:
+            hay = f"{item.title} {item.raw_text or ''}"
+            if not match_keywords(hay, self._keywords):
+                self._repo.set_status(item.id, "skipped")
+                return
         self._repo.set_status(item.id, "matched")
         try:
             fetched = self._fetcher.fetch(item)

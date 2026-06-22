@@ -33,15 +33,26 @@ def test_pipeline_filters_fetches_analyzes_notifies_and_sets_status():
     assert notifier.handled[0]["res"].tier == "major"
     assert repo.items_by_status("analyzed")[0].external_id == "v1"
 
-def test_pipeline_skips_when_no_keyword_match():
+def test_keyword_required_source_skips_when_no_match():
     repo = _repo()
-    item = repo.add_new("youtube", "v2", "无关闲聊", "http://y/v2", None, None, status="new")
+    item = repo.add_new("x", "t2", "无关闲聊", "http://x/t2", None, None, status="new")
     notifier = FakeNotifier()
     p = Pipeline(repo, keywords={"gpt-5.5"}, fetcher=FakeFetcher(),
                  analyzer=FakeAnalyzer(), notifier=notifier)
     p.process(item)
-    assert notifier.handled == []
-    assert repo.items_by_status("skipped")[0].external_id == "v2"
+    assert notifier.handled == []                       # X 是高产源,无关键词 → 跳过
+    assert repo.items_by_status("skipped")[0].external_id == "t2"
+
+def test_video_bypasses_keyword_filter():
+    repo = _repo()
+    # 视频标题完全不含关键词,但因为是手挑频道 → 仍然处理推送
+    item = repo.add_new("youtube", "v2", "How I use LLMs", "http://y/v2", None, None, status="new")
+    notifier = FakeNotifier()
+    p = Pipeline(repo, keywords={"gpt-5.5"}, fetcher=FakeFetcher(),
+                 analyzer=FakeAnalyzer(), notifier=notifier)
+    p.process(item)
+    assert len(notifier.handled) == 1                   # 视频不卡关键词,照推
+    assert repo.items_by_status("analyzed")[0].external_id == "v2"
 
 class ScoreAnalyzer:
     def __init__(self, score): self._score = score
